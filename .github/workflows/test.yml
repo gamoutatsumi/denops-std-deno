@@ -2,6 +2,8 @@ name: deno
 
 env:
   DENO_VERSION: 1.x
+  VIM_VERSION: v8.1.2424
+  NVIM_VERSION: v0.4.4
 
 on:
   schedule:
@@ -42,6 +44,24 @@ jobs:
       - uses: denoland/setup-deno@main
         with:
           deno-version: ${{ env.DENO_VERSION }}
+      - uses: thinca/action-setup-vim@v1
+        id: vim
+        with:
+          vim_type: Vim
+          vim_version: '${{ env.VIM_VERSION }}'
+      - uses: thinca/action-setup-vim@v1
+        id: nvim
+        with:
+          vim_type: Neovim
+          vim_version: '${{ env.NVIM_VERSION }}'
       - name: Test
         run: |
-          deno test
+          deno test --allow-run --allow-env --allow-net
+        env:
+          DENOPS_VIM: ${{ steps.vim.outputs.executable }}
+          DENOPS_NVIM: ${{ steps.nvim.outputs.executable }}
+          # XXX:
+          # Overwrite %TMP% to point a correct temp directory.
+          # Note that %TMP% only affects value of 'tempname()' in Windows.
+          # https://github.community/t5/GitHub-Actions/TEMP-is-broken-on-Windows/m-p/30432#M427
+          TMP: 'C:\Users\runneradmin\AppData\Local\Temp'
